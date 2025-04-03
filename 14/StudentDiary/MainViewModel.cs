@@ -1,124 +1,124 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
-using System.Windows;
+using System.Runtime.CompilerServices;
 using System.Windows.Input;
 
 namespace StudentDiary
 {
     public class MainViewModel : INotifyPropertyChanged
     {
-        public Schedule CurrentSchedule { get; } = new Schedule();
-        private Grade? _selectedGrade;
+        
+        public ICommand FilterCommand { get; }
+        public event PropertyChangedEventHandler? PropertyChanged;
+
         private DateTime? _filterDate;
-        private readonly ObservableCollection<Grade> _grades = new();
-        private ObservableCollection<Grade> _filteredGrades = new();
-
-        public ObservableCollection<Grade> FilteredGrades
-        {
-            get => _filteredGrades;
-            set
-            {
-                _filteredGrades = value;
-                OnPropertyChanged(nameof(FilteredGrades));
-            }
-        }
-
         public DateTime? FilterDate
         {
             get => _filterDate;
             set
             {
                 _filterDate = value;
-                OnPropertyChanged(nameof(FilterDate));
-                FilterGrades();
+                OnPropertyChanged();
+                ApplyFilter();
             }
         }
 
-        public Grade? SelectedGrade
+        private ObservableCollection<Grade> _filteredGrades;
+        public ObservableCollection<Grade> FilteredGrades
+        {
+            get => _filteredGrades;
+            set
+            {
+                _filteredGrades = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public ObservableCollection<Grade> Grades { get; set; }
+
+        private Grade _selectedGrade;
+        public Grade SelectedGrade
         {
             get => _selectedGrade;
             set
             {
                 _selectedGrade = value;
-                OnPropertyChanged(nameof(SelectedGrade));
-                CommandManager.InvalidateRequerySuggested();
+                OnPropertyChanged();
+                ((RelayCommand)EditGradeCommand).RaiseCanExecuteChanged();
+                ((RelayCommand)DeleteGradeCommand).RaiseCanExecuteChanged();
             }
         }
+
 
         public ICommand AddGradeCommand { get; }
         public ICommand EditGradeCommand { get; }
         public ICommand DeleteGradeCommand { get; }
         public ICommand FilterGradesCommand { get; }
 
+        public Schedule CurrentSchedule { get; set; } = new Schedule();
+
         public MainViewModel()
         {
-            AddGradeCommand = new RelayCommand(_ => AddGrade());
-            EditGradeCommand = new RelayCommand(_ => EditGrade(), _ => CanEditDelete());
-            DeleteGradeCommand = new RelayCommand(_ => DeleteGrade(), _ => CanEditDelete());
-            FilterGradesCommand = new RelayCommand(_ => FilterGrades());
-
-            LoadSampleGrades();
-            FilterGrades();
+            Grades = new ObservableCollection<Grade>();
+            FilteredGrades = new ObservableCollection<Grade>(Grades); // Инициализация
+            AddGradeCommand = new RelayCommand(AddGrade);
+            EditGradeCommand = new RelayCommand(EditGrade, CanEditOrDelete);
+            DeleteGradeCommand = new RelayCommand(DeleteGrade, CanEditOrDelete);
+            FilterGradesCommand = new RelayCommand(param => ApplyFilter());
         }
 
-        private void LoadSampleGrades()
-        {
-            _grades.Add(new Grade { Subject = "Математика", Date = DateTime.Now.AddDays(-3), Score = 5 });
-            _grades.Add(new Grade { Subject = "Физика", Date = DateTime.Now.AddDays(-1), Score = 4 });
-        }
 
-        private bool CanEditDelete() => SelectedGrade != null;
-
-        private void AddGrade()
-        {
-            var dialog = new GradeEditWindow();
-            if (dialog.ShowDialog() == true)
-            {
-                _grades.Add(dialog.Grade);
-                FilterGrades();
-            }
-        }
-
-        private void EditGrade()
+        private void EditGrade(object? parameter)
         {
             if (SelectedGrade == null) return;
-
-            var dialog = new GradeEditWindow(SelectedGrade);
-            if (dialog.ShowDialog() == true)
+            var editWindow = new GradeEditWindow(SelectedGrade);
+            if (editWindow.ShowDialog() == true)
             {
-                var index = _grades.IndexOf(SelectedGrade);
-                _grades[index] = dialog.Grade;
-                SelectedGrade = dialog.Grade;
-                FilterGrades();
+                OnPropertyChanged(nameof(Grades));
             }
         }
 
-        private void DeleteGrade()
+        private void AddGrade(object? parameter)
         {
-            if (MessageBox.Show("Удалить оценку?", "Подтверждение", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
-            {
-                _grades.Remove(SelectedGrade!);
-                FilterGrades();
-            }
+            Console.WriteLine("Добавление оценки..."); // Проверка, вызывается ли метод
+            var newGrade = new Grade { Subject = "Новый предмет", Date = DateTime.Today, Score = 5 };
+            Grades.Add(newGrade);
+            OnPropertyChanged(nameof(Grades)); // Уведомляем, что список изменился
         }
 
-        private void FilterGrades()
+        private void ApplyFilter()
         {
             if (FilterDate == null)
             {
-                FilteredGrades = new ObservableCollection<Grade>(_grades);
-                return;
+                FilteredGrades = new ObservableCollection<Grade>(Grades);
             }
-
-            var filtered = _grades.Where(g => g.Date.Date == FilterDate.Value.Date).ToList();
-            FilteredGrades = new ObservableCollection<Grade>(filtered);
+            else
+            {
+                FilteredGrades = new ObservableCollection<Grade>(
+                    Grades.Where(g => g.Date.Date == FilterDate.Value.Date));
+            }
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected virtual void OnPropertyChanged(string propertyName)
+        private void DeleteGrade(object? parameter)
+        {
+            if (SelectedGrade != null)
+            {
+                Grades.Remove(SelectedGrade);
+                OnPropertyChanged(nameof(Grades)); // Уведомление об изменениях
+            }
+        }
+
+
+        private bool CanEditOrDelete(object? parameter) => SelectedGrade != null;
+
+        private void FilterGrades(object? parameter)
+        {
+            // Реализация фильтрации
+        }
+
+        protected void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

@@ -4,36 +4,17 @@ namespace StudentDiary
 {
     public partial class GradeEditWindow : Window
     {
-        public Grade Grade { get; } = new Grade(); // Инициализация по умолчанию
+        public Grade Grade { get; private set; }
 
-        public GradeEditWindow()
+        public GradeEditWindow(Grade grade)
         {
             InitializeComponent();
-            Grade.Date = DateTime.Today;
-            DataContext = this;
+            Grade = grade;
+            DataContext = Grade;
         }
 
-        public GradeEditWindow(Grade gradeToEdit) : this()
+        private void SaveButton_Click(object sender, RoutedEventArgs e)
         {
-            Grade.Subject = gradeToEdit.Subject;
-            Grade.Date = gradeToEdit.Date;
-            Grade.Score = gradeToEdit.Score;
-        }
-
-        private void Save_Click(object sender, RoutedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(Grade.Subject))
-            {
-                MessageBox.Show("Введите название предмета!");
-                return;
-            }
-
-            if (Grade.Score < 1 || Grade.Score > 5)
-            {
-                MessageBox.Show("Оценка должна быть от 1 до 5!");
-                return;
-            }
-
             DialogResult = true;
             Close();
         }
