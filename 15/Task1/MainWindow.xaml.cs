@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
+
 namespace StudentDiary
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
@@ -41,6 +42,7 @@ namespace StudentDiary
         public MainWindow()
         {
             InitializeComponent();
+            Loaded += async (s, e) => await ((StudentViewModel)DataContext).LoadStudentsAsync();
             LoadSubjects();
             LoadSampleData();
             UpdateSubjectsGrid();

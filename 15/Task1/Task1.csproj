@@ -55,6 +55,11 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="BoolToVisibilityConverter.cs" />
+    <Compile Include="GradeModel.cs" />
+    <Compile Include="GradeService.cs" />
+    <Compile Include="StudentModel.cs" />
+    <Compile Include="StudentViewModel.cs" />
     <Page Include="AddStudentWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

@@ -51,6 +51,10 @@
         <KeyBinding Command="local:MainWindow.EditGradeCommand" Key="E" Modifiers="Control"/>
     </Window.InputBindings>
 
+    <Window.DataContext>
+        <local:StudentViewModel />
+    </Window.DataContext>
+
     <DockPanel>
         <Menu DockPanel.Dock="Top">
             <MenuItem Header="Файл">
@@ -172,6 +176,8 @@
                                 />
                     </StackPanel>
 
+                    <ProgressBar IsIndeterminate="True" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}" />
+                    <ListBox ItemsSource="{Binding Students}" DisplayMemberPath="StudentName" />
                     <ListView x:Name="studentGradesList" Grid.Row="1" Margin="5"
                               ItemTemplate="{StaticResource StudentGradeTemplate}"/>
 
